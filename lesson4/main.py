@@ -44,9 +44,14 @@ class TeacherWithLesson(BaseModel):
 
 def get_db():
     session = db.session
-    yield session
-    session.commit()
-    session.close()
+    try:
+        yield session  # Отдаём сессию в эндпоинт
+        session.commit()  # Коммитим, если не было ошибок
+    except Exception:
+        session.rollback()  # Откатываем транзакцию, если была ошибка
+        raise
+    finally:
+        session.close()  # Всегда закрываем сессию
 
 
 @app.post('/teachers')
@@ -57,11 +62,7 @@ def add_teachers(teacher: Teacher, session: db.Session = Depends(get_db)):
 
 @app.get('/teachers')
 def get_teachers() -> list[Teacher]:
-    db_teachers = db.session.execute(select(db.Teacher)).scalars().all()
-    teachers = []
-    for teacher in db_teachers:
-        teachers.append(Teacher.model_validate(teacher))
-    return teachers
+    return [Teacher.model_validate(teacher) for teacher in db.session.execute(select(db.Teacher)).scalars().all()]
 
 
 @app.post('/students')
@@ -72,11 +73,7 @@ def add_teachers(student: Student, session: db.Session = Depends(get_db)):
 
 @app.get('/students')
 def get_teachers() -> list[Student]:
-    db_students = db.session.execute(select(db.Student)).scalars().all()
-    students = []
-    for student in db_students:
-        students.append(Student.model_validate(student))
-    return students
+    return [Student.model_validate(student) for student in db.session.execute(select(db.Student)).scalars().all()]
 
 @app.post('/lessons')
 def add_teachers(lesson: Lesson, session: db.Session = Depends(get_db)):

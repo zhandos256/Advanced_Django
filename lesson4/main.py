@@ -86,11 +86,7 @@ def add_teachers(lesson: Lesson, session: db.Session = Depends(get_db)):
 
 @app.get('/lessons')
 def get_teachers() -> list[Lesson]:
-    db_lessons = db.session.execute(select(db.Lesson)).scalars().all()
-    lessons = []
-    for lesson in db_lessons:
-        lessons.append(Lesson.model_validate(lesson))
-    return lessons
+    return [Lesson.model_validate(lesson) for lesson in db.session.execute(select(db.Lesson)).scalars().all()]
 
 
 # def nested_dependency(teacher_with_lesson: TeacherWithLesson):
